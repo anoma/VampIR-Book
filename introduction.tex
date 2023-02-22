@@ -82,7 +82,7 @@ With an adequate intermediate representation, the total amount of work necessary
 
 A very basic example of a \vampir\ program is the following;
 
-\begin{lstlisting}[language=Python, caption={A Very Simple \vampir\ File}]
+\begin{lstlisting}[language=Python]
   def x = 10;
 
   x = 10;
@@ -107,7 +107,7 @@ This will create the \vampir\ binary at `/target/debug/vamp-ir' within the main 
 
 \vampir\ does not possess any cryptographic capabilities on its own. This means that some specific parameters, such as the field size, cannot be determined by \vampir, but are instead decided at compile time. To compile this circuit, we first must choose a target. For this example, I will choose PLONK \textcolor{red}{[What is the name of the program? How does one access other targets?]}.
 
-For the sake of this example, I will assume that the lines in Listing 1 are saved into a file called `ex1.pir' stored within a new folder called `examples' within the main \vampir\ directory. 
+For the sake of this example, I will assume that the lines in our example program are saved into a file called `ex1.pir', stored within a new folder called `examples' within the main \vampir\ directory. 
 
 \begin{lstlisting}[language=bash]
   $ mkdir examples
@@ -188,7 +188,7 @@ We do not need to give values to variables upfront. If our file was instead
   x = 10;
 \end{lstlisting}
 
-without declaring the value of `x', \vampir\ would interpret this unbound variable as an input needing to be specified at compile time. If we save this in the file `ex2.pir' and compile it to a circuit, we can see that \vampir\ will ask for an input when it's needed.
+without declaring the value of `x', \vampir\ would interpret this unbound variable as an input needing to be specified during proof generation. If we save this in the file `ex2.pir' and compile it to a circuit, we can see that \vampir\ will ask for an input when it's needed.
 
 
 \begin{lstlisting}[language=bash]
