@@ -1,10 +1,18 @@
 \documentclass[a4paper]{article}
 \usepackage{amsmath,amssymb,amsfonts}
 \usepackage{tikz-cd}
+\usepackage{listings}
+\usepackage{wrapfig}
 \usepackage{cmll}
 \usepackage{bbold}
 \usepackage{hyperref}
 \usepackage[T1]{fontenc}
+
+\lstset{basicstyle=\ttfamily,
+  showstringspaces=false,
+  commentstyle=\color{red},
+  keywordstyle=\color{blue}
+}
 
 \addtolength{\oddsidemargin}{-.75in}
 \addtolength{\evensidemargin}{0in}
@@ -12,9 +20,10 @@
 \addtolength{\topmargin}{-.75in}
 \addtolength{\textheight}{1.5in}
 
+\newcommand{\vampir}{VampIR}
 
-\title{The VampIR Book}
-\author{The VampIR Team}
+\title{The \vampir\ Book}
+\author{The \vampir\ Team}
 \date{}
 
 \usepackage{natbib}
@@ -29,15 +38,21 @@
 \maketitle
 
 
-\bigskip
+\tableofcontents
 
 \setcounter{section}{0}
 
+\pagebreak
 \input{introduction.tex}
+\pagebreak
 \input{section_2.tex}
+\pagebreak
 \input{section_3.tex}
+\pagebreak
 \input{section_4.tex}
+\pagebreak
 \input{appendix.tex}
+\pagebreak
 
 
 \bibliographystyle{alpha}
