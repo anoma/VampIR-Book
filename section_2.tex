@@ -111,4 +111,145 @@ Exponentiating by -1 will always produce 1, with the exception of 0.
 
 \subsection{Functions}
 
+The \lstinline{def} construct allows one to define, not just constants, but functions as well.
+
+\begin{lstlisting}[language=Python]
+  def square x = x ^ 2;
+
+  square 4 = 16;
+\end{lstlisting}
+
+The name of the function is denoted by the first token after \lstinline{def}. Function application is denoted by juxtaposition, a la some functional languages such as Haskell.
+
+During compilation, the type checker will identify \lstinline{square}'s type as a function from integers to integers.
+
+\begin{lstlisting}[language=bash]
+  > square[3]: (int -> int)
+\end{lstlisting}
+
+Functions can have as many arguments as you want.
+
+\begin{lstlisting}[language=Python]
+  def f x y z = x * z + y;
+
+  f 4 5 6 = 29;
+\end{lstlisting}
+
+The type of the function indicates multiple arguments.
+
+\begin{lstlisting}[language=bash]
+  > f[5]: (int -> (int -> (int -> int)))
+\end{lstlisting}
+
+This tells us that each argument will take in an integer and produce a function, until the third argument, after which it will produce an integer. This indicates that application is left-associative and functions are curried by default.
+
+\begin{lstlisting}[language=Python]
+  ((f 4) 5) 6 = f 4 5 6;
+\end{lstlisting}
+
+Definitions can contain definitions inside of them.
+
+\begin{lstlisting}[language=Python]
+  def g x = {
+    def k = 20;
+    x * k
+  };
+
+  g 3 = 60;
+\end{lstlisting}
+
+Notice the usage of curly braces to define blocks that scope the function. Also, notice that the semicolon for the definition comes after the closing curly brace, and there is no semicolon for the last line before that brace. 
+
+Internal \lstinline{def} statements should be used similarly to \lstinline{let} statements common in many functional languages. Internal \lstinline{def} statements can be functions as well.
+
+\begin{lstlisting}[language=Python]
+  def cube x = {
+    def square x = x * x;
+    x * square x
+  };
+
+  cube 3 = 27;
+\end{lstlisting}
+
+Types for internal \lstinline{def} statements are not given during compilation, but they are still checked.
+
+There is no limit to the number of lines or nestings within a definition. 
+
+\begin{lstlisting}[language=Python]
+  def power x = {
+    def hypercube x = {
+      def square x = x * x;
+      square (square x)
+    };
+    def cube x = {
+      def square x = x * x;
+      x * square x
+    };
+    cube (hypercube x)
+   };
+
+  power 2 = 4096;
+\end{lstlisting}
+
+Overlapping names are allowed. References to names will refer to the most recent binding.
+
+\begin{lstlisting}[language=Python]
+  def x = 4;
+  def x = 8;
+  x = 8;
+\end{lstlisting}
+
+During type checking, both variables are listed.
+
+\begin{lstlisting}[language=bash]
+  > x[2]: int
+  > x[3]: int
+\end{lstlisting}
+
+The numbers next to the names are, in some sense, the "true" names of the variables. Each variable has a unique number identifying it, allowing the system to avoid confusing variables with the same name.
+
+Equations can also appear in definitions. While definitions *must* return a value, and so cannot contain only an equation, they can act as gates for other values.
+
+
+\begin{lstlisting}[language=Python]
+  def h x = {x = 4; x};
+  
+  h 4;
+\end{lstlisting}
+
+This illustrates that a \vampir\ file does not need any top-level equations, but will still represent a proposition through the equations enforced by function calls.
+
+\begin{lstlisting}[language=Python]
+  h 5;
+\end{lstlisting}
+
+will produce invalid proof, in this case.
+
+Equations are only part of the resulting circuit when the function is actually called.
+
+\begin{lstlisting}[language=Python]
+  def j x = {0 = 1; x};
+  
+  1 = 1;
+\end{lstlisting}
+
+will produce a valid proof because `j' is never fully instantiated. Equations become part of the circuit when their parent function is fully instantiated. \lstinline|def k = {0 = 1; 4};| will produce an invalid proof since `k' is already fully instantiated.
+
+Using polynomial constraints, we can create sophisticated, reusable checks. The following, for example, checks that a field element is a boolean; that it is either 0 or 1.
+
+\begin{lstlisting}[language=Python]
+  def isBool x = { 
+    (x - 1) * x = 0;
+    x
+  };
+  
+  isBool 0;
+  isBool 1;
+\end{lstlisting}
+
+\subsection{Tuples}
+
+
+
 \subsection{Higher-Order Functions}
+
