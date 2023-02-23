@@ -46,7 +46,7 @@ One can add, subtract, and multiply numbers, using, respectively, the infix oper
 Division has the same precedence as multiplication, and associates to the left, otherwise. 
 
 \begin{lstlisting}[language=Python]
-  2/3/4/5 = ((2/3)/4)/5;
+  2/3*4/5 = ((2/3)*4)/5;
 \end{lstlisting}
 
 This operation will give an output using the division of the underlying field, meaning constraints may differ in truth value depending on the compilation target. If one uses a prime field of size
@@ -56,7 +56,7 @@ This operation will give an output using the division of the underlying field, m
 used, for example, in BLS12-381, then the following is valid.
 
 \begin{lstlisting}[language=Python]
-  2/3 = 0x26a48d1bb889d46d66689d580335f2ac713f36abaaaa1eaa5555555500000001;
+2/3 = 0x26a48d1bb889d46d66689d580335f2ac713f36abaaaa1eaa5555555500000001;
 \end{lstlisting}
   
 If one tries dividing by zero, they will get an error at some point in the process depending on where the division occurs. \lstinline{1/0 = 1;} will produce an error during type inference. \lstinline{1/x = 1;} will produce an error if `x' is set to 0 during witness solicitation.
@@ -80,7 +80,7 @@ Exponentiation has greater precedence than any other arithmetic operator.
   5 * 6 ^ 7 = 5 * (6 ^ 7);
 \end{lstlisting}
 
-Only constant exponents are allowed, as they can be translated into iterated multiplication. \lstinline{2 ^ x = 4;} will create an error during type inference.
+Only constant exponents are allowed, as they can be translated into iterated multiplication at circuit compilation time. \lstinline{2 ^ x = 4;} will create an error during type inference.
 
 Exponentiation by 0 will always produce 1, even if the base is 0.
 
@@ -109,7 +109,7 @@ Exponentiating by -1 will always produce 1, with the exception of 0.
   0 ^ (-1) = 0;
 \end{lstlisting}
 
-\subsection{Functions}
+\subsection{Functions} \label{FUN}
 
 The \lstinline{def} construct allows one to define, not just constants, but functions as well.
 
@@ -135,13 +135,13 @@ Functions can have as many arguments as you want.
   f 4 5 6 = 29;
 \end{lstlisting}
 
-The type of the function indicates multiple arguments.
+The type of this function indicates multiple arguments.
 
 \begin{lstlisting}[language=bash]
   > f[5]: (int -> (int -> (int -> int)))
 \end{lstlisting}
 
-This tells us that each argument will take in an integer and produce a function, until the third argument, after which it will produce an integer. This indicates that application is left-associative and functions are curried by default.
+This tells us that each argument will take in an integer and produce a function, until the third argument, after which it will produce an integer. This indicates that application is left-associative and functions are curried by default (more on this in section \ref{HOF}).
 
 \begin{lstlisting}[language=Python]
   ((f 4) 5) 6 = f 4 5 6;
@@ -206,9 +206,9 @@ During type checking, both variables are listed.
   > x[3]: int
 \end{lstlisting}
 
-The numbers next to the names are, in some sense, the "true" names of the variables. Each variable has a unique number identifying it, allowing the system to avoid confusing variables with the same name.
+The numbers next to the names are, in some sense, the ``true'' names of the variables. Each variable has a unique number identifying it, allowing the system to avoid confusing variables with the same name.
 
-Equations can also appear in definitions. While definitions *must* return a value, and so cannot contain only an equation, they can act as gates for other values.
+Equations can also appear in definitions. While definitions \textbf{must} return a value, and so cannot contain only an equation, they can act as gates for other values.
 
 
 \begin{lstlisting}[language=Python]
@@ -217,15 +217,9 @@ Equations can also appear in definitions. While definitions *must* return a valu
   h 4;
 \end{lstlisting}
 
-This illustrates that a \vampir\ file does not need any top-level equations, but will still represent a proposition through the equations enforced by function calls.
+This illustrates that a \vampir\ file does not need any top-level equations, but will still represent a proposition through the equations enforced by function calls. \lstinline{h 5;} will produce an invalid proof, in this case.
 
-\begin{lstlisting}[language=Python]
-  h 5;
-\end{lstlisting}
-
-will produce invalid proof, in this case.
-
-Equations are only part of the resulting circuit when the function is actually called.
+Equations aren't enforced if their parent function is never actually called.
 
 \begin{lstlisting}[language=Python]
   def j x = {0 = 1; x};
@@ -233,9 +227,9 @@ Equations are only part of the resulting circuit when the function is actually c
   1 = 1;
 \end{lstlisting}
 
-will produce a valid proof because `j' is never fully instantiated. Equations become part of the circuit when their parent function is fully instantiated. \lstinline|def k = {0 = 1; 4};| will produce an invalid proof since `k' is already fully instantiated.
+will produce a valid proof because `j' is never fully instantiated. Equations become part of the circuit when their parent function is fully instantiated. \lstinline|def k = {0 = 1; 4};| \textbf{will} produce an invalid proof since `k' is already fully instantiated.
 
-Using polynomial constraints, we can create sophisticated, reusable checks. The following, for example, checks that a field element is a boolean; that it is either 0 or 1.
+Using polynomial constraints, we can create sophisticated, reusable checks. The following, for example, checks that a field element is a boolean; either 0 or 1.
 
 \begin{lstlisting}[language=Python]
   def isBool x = { 
@@ -247,9 +241,147 @@ Using polynomial constraints, we can create sophisticated, reusable checks. The 
   isBool 1;
 \end{lstlisting}
 
+
+
+
+
+
 \subsection{Tuples}
 
+The only first-order data structure provided in \vampir\ is the tuple. We can use them in place of numbers to check multiple things in parallel.
+
+\begin{lstlisting}[language=Python]
+  def xs = (1, 2);
+  
+  xs = (1, 2);
+\end{lstlisting}
+
+During type checking, we see xs's type.
+
+\begin{lstlisting}[language=bash]
+  > xs[2]: (int, int)
+\end{lstlisting}
+
+This indicates that xs is a pair of integers. We can also iterate tuples as much as we want.
+
+\begin{lstlisting}[language=Python]
+  def xs = (1, 2, 3, 4, 5, 6, 7, 8, 9);
+  
+  xs = (1, 2, 3, 4, 5, 6, 7, 8, 9);
+\end{lstlisting}
+
+During type checking, we observe the type
+
+\begin{lstlisting}[language=bash]
+  > xs[2]: (int, (int, (int, (int, (int, (int, (int, (int, int))))))))
+\end{lstlisting}
+
+This indicates that tuples with more than two entries are, internally, just nested pairs associated to the right.
+
+\begin{lstlisting}[language=Python]
+  (1, 2, 3) = (1, (2, 3));
+\end{lstlisting}
+
+\lstinline{(1, 2, 3) = ((1, 2), 3);} will produce a type error. We cannot compare tuples to numbers, so \lstinline{1 = (1, 1);} will produce an error. We also cannot treat tuples as numbers, so, for example, \lstinline{(1, 2) + (3, 4);} will produce an error.
+
+\vampir\ provides the ability to define functions over tuples using pattern matching.
+
+\begin{lstlisting}[language=Python]
+  def add (a, b) (x, y) = (a + x, b + y);
+  
+  add (1, 2) (3, 4) = (4, 6);
+\end{lstlisting}
+
+We can define many standard tuple construction and manipulation functions.
+
+\begin{lstlisting}[language=Python]
+  def fst (x, y) = x;
+  def snd (x, y) = y;
+  def third (x, y, z) = z;
+  def dup x = (x, x);
+  def swap (x, y) = (y, x);
+  def assoc (x, (y, z)) = ((x, y), z);
+\end{lstlisting}
+
+As you can see by \lstinline{assoc}, one can pattern match a tuple within another tuple. Additionally, the fact that n-tuples are nested pairs means that \lstinline{fst} acts uniformly on tuples; using that definition we'd have \lstinline{fst (1, 2, 3) = 1}.
+
+The types here tell us something interesting. We see, for example, that;
+
+\begin{lstlisting}[language=bash]
+  > fst[4]: (([24], [25]) -> [24])
+  > dup[13]: ([43] -> ([43], [43]))
+  > swap[16]: (([50], [51]) -> ([51], [50]))
+\end{lstlisting}
+
+The numbers in square braces denote variable types. These functions do not have a fixed type, but their types can be instantiated to be different types, depending on the context. Different calls within the same program can also have different types. For example, we can have both of these equations in the same file:
+
+\begin{lstlisting}[language=Python]
+  fst (1, 2) = 1;
+  fst ((1, 2), 3) = (1, 2);
+\end{lstlisting}
+
+Even though we call the same function on both lines, we get different types each time. On the first line, it returns an integer while on the second it returns a pair.
+
+\vampir\ also provides a 0-tuple denoted \lstinline{()}, analogous to the return value of a unit type in many functional languages or a void type in many imperative languages. It's the closest thing to getting a function to return nothing.
+
+\pagebreak
+
+\begin{lstlisting}[language=Python]
+  def tt = ();
+  def f x = {
+    x = 2;
+    ()
+  };
+
+  f 2 = tt;
+\end{lstlisting}
+
+During type inference we see the following;
+
+\begin{lstlisting}[language=bash]
+   > tt[2]: ()
+   > f[4]: (int -> ())
+\end{lstlisting}
+
+indicating that \lstinline{tt} is an element of the unit type and that \lstinline{f} will return an element of the unit type on an integer input.
+
+Using units, we can design some of our functions to act like list manipulation programs. That is if we think of \lstinline{(x, y)} as \lstinline{Cons x y} and \lstinline{()} as \lstinline{Nil}, we can encode a list like `[1, 2, 3, 4]' as \lstinline{(1, 2, 3, 4, ())}. The utility of this lies in the fact that each entry will appear in the head of a pair. This allows us to define more flexible programs. Modifying a few of our previous examples, we can have
+
+\begin{lstlisting}[language=Python]
+  def swap (x, y, r) = (y, x, r);
+  swap (1, 2, ()) = (2, 1, ());
+  swap (1, 2, 3, ()) = (2, 1, 3, ());
+  swap (1, 2, 3, 4, ()) = (2, 1, 3, 4, ());
+
+  def tail (x, y) = y;
+  tail (1, 2, ()) = (2, ());
+  tail (1, 2, 3, ()) = (2, 3, ());  
+  tail (1, 2, 3, 4, ()) = (2, 3, 4, ());
+  
+  def total (x, y, r) = x+y;
+  total (1, 2, ()) = 3;
+  total (1, 2, 3, ()) = 3;  
+  total (1, 2, 3, 4, ()) = 3;
+
+  def add (a, b, q) (x, y, r) = (a + x, b + y, ());
+  add (1, 2, ()) (3, 4, ()) = (4, 6, ());
+  add (1, 2, 3, 4, 5, ()) (6, 7, 8, ()) = (7, 9, ());
+\end{lstlisting}
+
+\vampir\ ultimately generates a fixed data structure, meaning that there can't be a proper variable-length list type. As such, many list manipulation programs that one might take for granted can't be defined in full generality in \vampir. However, this technique can recover some of that functionality in practice.
 
 
-\subsection{Higher-Order Functions}
 
+
+
+
+
+\subsection{Higher-Order Functions} \label{HOF}
+
+\begin{lstlisting}[language=Python]
+  def f x y = {0 = 1; x};
+
+  f 2;
+\end{lstlisting}
+
+will not produce an invalid proof.
