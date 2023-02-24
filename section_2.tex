@@ -1,6 +1,6 @@
 \section{Programming in \vampir}
 
-\subsection{Basic Arithmetic}
+\subsection{Basic Arithmetic} \label{ARITH}
 
 \vampir's arithmetic denotations are fairly straightforward, being very similar to what's present in many mainstream languages.
 
@@ -253,6 +253,21 @@ Using polynomial constraints, one can create sophisticated, reusable checks. The
   isBool 1;
 \end{lstlisting}
 
+\label{ARITHEX}
+There are a handful of additional arithmetic operators which may be used so long as the circuit can be transformed so they aren't referenced. These operators will be detailed in full in section \ref{EXAR}. For now, the modulus, \lstinline|%|, will be used as an example.
+
+\begin{lstlisting}[language=Python]
+  6 = 15 % 9;
+\end{lstlisting}
+
+will create a valid proof. This is because \lstinline|15 % 9| can be immediately simplified into \lstinline|6| during circuit generation. If one attempts to use an uninstantiated variable, that is one without a value defined in the file, they will get an error.
+
+\begin{lstlisting}[language=Python]
+  6 = x % 9;
+\end{lstlisting}
+
+will generate an error during circuit creation informing us that the modulus is not a supported constraint.
+
 
 
 
@@ -304,7 +319,7 @@ This indicates that tuples with more than two entries are, internally, just nest
   add (1, 2) (3, 4) = (4, 6);
 \end{lstlisting}
 
-One can define many standard tuple construction and manipulation functions.
+Many standard tuple construction and manipulation functions can be defined.
 
 \begin{lstlisting}[language=Python]
   def fst (x, y) = x;
@@ -336,8 +351,6 @@ Even though the same function is called on both lines, different types are retur
 
 \label{UNITEXP}
 \vampir\ also provides a 0-tuple denoted \lstinline{()}, analogous to the return value of a unit type in many functional languages or a void type in many imperative languages. It's the closest thing to getting a function to return nothing.
-
-\pagebreak
 
 \begin{lstlisting}[language=Python]
   def tt = ();
@@ -402,13 +415,7 @@ it seems like they will need to input a pair. However, during proof creation, \v
 
 It splits the variable into two sub-variables, named \lstinline{x.0} (the first element of \lstinline{x}) and \lstinline{x.1} (the second element of \lstinline{x}). So the compiled circuit does not, in fact, have a hole in the shape of a pair; rather it has two holes corresponding to the elements of the pair.
 
-Without a clear first-order datatype for each uninstantiated variable, circuit generation is not possible. If one tries compiling 
-
-\begin{lstlisting}[language=Python]
-  x = y;
-\end{lstlisting}
-
-they will get an error indicating such.
+Without a variable-free first-order datatype for each uninstantiated variable, circuit generation is not possible. If one tries compiling \lstinline{x = y;} without definitions for x or y, they will get an error indicating such.
 
 
 
@@ -450,7 +457,7 @@ Looking at the types;
   > f[4]: app2[4]: (([10] -> [10]) -> ([10] -> [10]))
 \end{lstlisting}
 
-one can see that \lstinline{app2} takes a function from the (variable) type \lstinline{10} onto itself, and creates a new function, also from \lstinline{10} onto itself.
+one can see that \lstinline{app2} takes a function from the (variable) type \lstinline{[10]} onto itself, and creates a new function, also from \lstinline{[10]} onto itself.
 
 As mentioned in section \ref{CALLREF}, the constraints of a function are not called unless the function is fully substantiated. The following program produces a valid proof.
 
@@ -527,9 +534,9 @@ More generic functions can be defined over tuples;
                 (4, 5, 6)) = 3;
 \end{lstlisting}
 
-\vampir\ does not give unrestricted access to higher-order functions; any appearing in a program must be simply typed. For example, \lstinline|fun x { x x };| will produce a typing error. This means that, in particular, one cannot define a fixed-point combinator, which would be necessary to implement general recursion. Still, there are many powerful techniques made available by what is given. In particular, one can define and utilize lambda-encoded data.
+\vampir\ does not give unrestricted access to higher-order functions; any appearing in a program must be simply typable. For example, \lstinline|fun x { x x };| will produce a typing error. This means that, in particular, one cannot define a fixed-point combinator, which would be necessary to implement general recursion. Still, there are many powerful techniques made available by what is given. In particular, one can define and utilize lambda-encoded data.
 
-If \vampir\ didn't already have build-in pairs, one could implement them as
+If \vampir\ didn't already have built-in pairs, one could implement them as
 
 \begin{lstlisting}[language=Python]
   def pair x y = fun p { p x y };
@@ -570,7 +577,7 @@ Further structural manipulation functions can easily be defined.
   snd (assoc (pair 1 (pair 2 3))) = 3;
 \end{lstlisting}
 
-Functions converting between the two formats can easily be defined;
+Functions converting between the two formats can also easily be defined;
 
 \begin{lstlisting}[language=Python]
   def lpair (x, y) = pair x y;
@@ -579,7 +586,7 @@ Functions converting between the two formats can easily be defined;
   (1, 2) = upair (pair 1 2);
 \end{lstlisting}
 
-This is all interesting but doesn't give us anything that wasn't already provided. A variant of this idea can encode arbitrary length lists.
+This is all interesting but doesn't give us anything that wasn't already provided. However, a variant of this idea can encode arbitrary length lists.
 
 \begin{lstlisting}[language=Python]
   def nil = fun n c {n};
@@ -594,7 +601,7 @@ The utility of this construction is that the length of the list is not encoded i
   ex_list 0 (fun x y {x + y}) = 6;
 \end{lstlisting}
 
-One can define many well-founded recursive functions.
+One can define many well-founded recursive functions this way.
 
 \begin{lstlisting}[language=Python]
   def append l1 l2 = fun n c { l1 (l2 n c) c };
@@ -605,9 +612,9 @@ One can define many well-founded recursive functions.
 One cannot define generic translations between lists and built-in tuples, so a bespoke method must be made for each length. But only the translations need to be length-specific. The operations over lists can be generic.
 
 \begin{lstlisting}[language=Python]
-  def tup2list_2 (x1, x2) = (cons x1 (cons x2 nil));
-  def tup2list_3 (x1, x2, x3) = (cons x1 (cons x2 (cons x3 nil)));
-  def tup2list_4 (x1, x2, x3, x4) = (cons x1 (cons x2 (cons x3 (cons x4 nil))));
+  def tup2list_2 (x1, x2) = fun n c {c x1 (c x2 n)};
+  def tup2list_3 (x1, x2, x3) = fun n c {c x1 (c x2 (c x3 n))};
+  def tup2list_4 (x1, x2, x3, x4) = fun n c {c x1 (c x2 (c x3 (c x4 n)))};
 
   def replaceFst a (x, y) = (a, y);
 
@@ -632,6 +639,6 @@ One cannot define generic translations between lists and built-in tuples, so a b
   sum (tup2list_4 (1, 2, 3, 4)) = 10;
 \end{lstlisting}
 
-Other variants of this construction could be made. Any kind of well-founded tree can be encoded and folded over via similar methods, for example.
+Other variants of this construction could be made. Any kind of well-founded tree can be encoded and folded over via similar methods. This opens the door to many powerful functional programming techniques, including free monads, for example.
 
 It should be noted that there are some fundamental limitations to this method. Mainly, it can't interact non-trivially with the underlying field. One cannot, for example, translate a field element into a Church-encoded number or a boolean. While one can certainly implement those in \vampir\ (in fact, \lstinline|app2| from earlier is a Church numeral, and \lstinline|const| is a Church boolean), they cannot be used to actually reason about field elements. The methods described in this section are exclusively useful for data \textbf{structure} manipulation, but not data manipulation in general. This is because data structures are fixed at circuit generation time, but field values are not completely fixed until proof generation, which occurs after circuit generation. This implies that the circuit's structure cannot depend on field values.

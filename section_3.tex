@@ -1,3 +1,168 @@
 \section{Witness Generation}
 
-How to make your circuits more fresh... \textcolor{red}{[TODO]}
+\subsection{The fresh keyword}
+
+It's not always practical to calculate values purely using the operations over a finite field. As such, \vampir\ adds an additional construct for calculating values, called \lstinline{fresh}.
+
+\begin{lstlisting}[language=Python]
+  fresh (22) = 22;
+\end{lstlisting}
+
+\lstinline{fresh} must be followed by a syntactically valid expression surrounded by parentheses. This expression can call all arithmetic operators described in section \ref{ARITH}, along with additional operators not native to arithmetic circuits which will be detailed in the upcoming sections.
+
+\lstinline{fresh} can make unrestricted calls to variables within the environment, and it is often used to calculate values involving them.
+
+\begin{lstlisting}[language=Python]
+  fresh (x / y) = 2;
+\end{lstlisting}
+
+Anything called inside of fresh is essentially a black box to the circuit. The circuit, in this case, does not verify that the result is actually the result of a quotient; rather, it's just a witness value, like any provided by the end user during witness solicitation. \lstinline{fresh} allows us to calculate such witnesses automatically instead of them being provided by the end user. This means that properties of fresh witnesses need to be enforced by separate constraints in order to prove anything; see section \ref{GW} for details.
+
+The fact that \lstinline{fresh} acts as a witness generator can be observed with the following code;
+
+\begin{lstlisting}[language=Python]
+  6 = fresh (15) % 9;
+\end{lstlisting}
+
+Similar to the situation described in section \ref{ARITHEX}, an error declaring that \lstinline|%| is an unsupported constraint is generated. \lstinline{fresh (15)} does not get turned into a number; it gets turned into a hole for a witness which is then automatically filled with \lstinline|15| during proof generation. However,
+
+\begin{lstlisting}[language=Python]
+  6 = fresh (x % 9);
+\end{lstlisting}
+
+will produce a valid circuit, even if \lstinline|x| is a free variable which will be filled with a solicited witness.
+
+The syntactic requirements for \lstinline{fresh} can lead to awkward expressions. Since negation requires its own surrounding parentheses, and fresh requires its own parentheses, \lstinline{fresh (-1)} will produce a syntax error; one must write \lstinline{fresh ((-1))} instead.
+
+\textcolor{red}{[Note: It seems to me that the restriction of exponentiation, that it cannot have variables in its exponent, should be lifted inside of fresh. Currently, it is not.]}
+
+\lstinline{fresh} will generally not interact well with higher-order functions or tuples.
+
+\begin{lstlisting}[language=Python]
+  def id x = x;
+  def fid = fresh (id);
+
+  6 = fid 6;
+\end{lstlisting}
+
+will produce a cryptic error informing us that the application at \lstinline{fid 6} failed; although it seems to have accepted making a "fresh" version of \lstinline{id}. We get a similar error from
+
+\begin{lstlisting}[language=Python]
+  (1, 6) = fresh ((1, 6));
+\end{lstlisting}
+
+Generally, \lstinline{fresh} should only be used to generate field elements, not data structures. So long as the return type is \lstinline{int}, \lstinline{fresh} can use any available functions and capabilities.
+
+\begin{lstlisting}[language=Python]
+  7 = fresh ((fun (x, y) {x + y}) (1, 6));
+\end{lstlisting}
+
+works just fine, for example.
+
+\subsection{Expanded Arithmetic} \label{EXAR}
+
+In addition to the main field operations, there are three more operations available.
+
+\lstinline|\| calculates integer division, rounded toward 0.
+
+\begin{lstlisting}[language=Python]
+  (3 \ 2) = 1;
+  (5 \ 2) = 2;
+  (233 \ 55) = 4;
+\end{lstlisting}
+
+Dividing with negatives can seem to behave strangely, as integers are converted into field elements. Generally, one will observe that \lstinline|((-k) \ n) = ((-1) \ n) - (k \ n)|.
+
+\begin{lstlisting}[language=Python]
+  ((-3) \ 2) = ((-1) \ 2) - 1;
+  ((-5) \ 2) = ((-1) \ 2) - 2;
+  ((-233) \ 55) = ((-1) \ 55) - 4;
+\end{lstlisting}
+
+and dividing by a negative will usually end up as 0 since it gets interpreted as dividing by a very large number.
+
+\begin{lstlisting}[language=Python]
+  (2 \ (-1)) = 0;
+  (2234 \ (-100)) = 0;
+  (5555555 \ (-2)) = 0;
+\end{lstlisting}
+
+\lstinline|%| calculates the modulus.
+
+\begin{lstlisting}[language=Python]
+  (3 % 2) = 1;
+  (5 % 2) = 2;
+  (233 % 55) = 4;
+\end{lstlisting}
+
+The modulus has similar strange behaviour when interacting with negatives. Taking the modulus of a negative number can vary based on the underlying field size, as \lstinline|(-n) % k| will be the same as  \lstinline|p - n % k|, where \lstinline|p| is the field size. For a prime field of size
+
+52435875175126190479447740508185965837690552500527637822603658699938581184513
+
+we'd have
+
+\begin{lstlisting}[language=Python]
+  (-6) % 5 = 2;
+  (-233) % 55 = 10;
+\end{lstlisting}
+
+taking the modulus by a negative will usually end up doing nothing as it's interpreted as taking the modulo by a very large number.
+
+\begin{lstlisting}[language=Python]
+  (2 % (-1)) = 2;
+  (2234 % (-100)) = 2234;
+  (5555555 % (-2)) = 5555555;
+\end{lstlisting}
+
+
+\lstinline{|} calculates ordinary division in the underlying field, however, it doesn't generate an error when dividing by 0.
+
+\begin{lstlisting}[language=Python]
+  15|3 = 15/3;
+  15|0 = 0;
+\end{lstlisting}
+
+
+
+
+
+
+
+
+
+
+\subsection{Conditionals}
+
+\textcolor{red}{[TODO]}
+
+
+
+
+
+
+\subsection{Gating Witnesses} \label{GW}
+
+By default, any circuit we generate will not know anything about fresh witnesses. They are just numbers, unless we add additional constraints to give them meaning. Consider this function which indicates if a number is zero or not
+
+\begin{lstlisting}[language=Python]
+  def isZero x = 1 - fresh (1 | x) * x;
+  
+  isZero ((-1)) = 0;
+  isZero 0 = 1;
+  isZero 1 = 0;
+  isZero 2 = 0;
+\end{lstlisting}
+
+While this generates a valid proof, what is it proving? Essentially just that 0 = 0 and 1 = 1. Since the correctness of \lstinline{isZero} isn't actually checked, we haven't actually proved that the answers are correct, even though we've calculated them correctly. We can fix this by adding additional constraints.
+
+\begin{lstlisting}[language=Python]
+  def isZero x = {
+    def xi = fresh (1 | x);
+    x * (1 - xi * x) = 0;
+    1 - xi * x
+  };
+\end{lstlisting}
+
+That new constraint checks that either \lstinline{x = 0} or \lstinline{xi * x = 1}. It's worth thinking carefully about how this constraint is effecting the output of the function. If the input is non-zero, we can calculate its inverse. By definition, this inverse will be 1 when multiplied by the input. The inverse cannot exist if the input is zero, so checking that \lstinline{xi * x = 1} guarantees that \lstinline{x} is not zero. If \lstinline{x} is zero, the constraint becomes trivial. This means the value of \lstinline{xi} is now unconstrained. However, \lstinline{xi}, being multiplied by \lstinline{x} in the output, will not be able to effect the output's value. Ultimately, the constraint forces the output to be unique. If we calculated witnesses incorrectly, then the constraint would fail and the proof would be invalid.
+
+This sort of thinking is at the heart of any meaningful usage of \lstinline{fresh}. Whenever it's used, we should think of the circuit as defining a relation whose validity ranges over every possible value. By putting constraints on the possible values of a fresh witness, we are narrowing that relation, making the statement of the circuit more specific.
