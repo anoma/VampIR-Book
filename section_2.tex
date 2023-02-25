@@ -459,7 +459,7 @@ Looking at the types;
 
 one can see that \lstinline{app2} takes a function from the (variable) type \lstinline{[10]} onto itself, and creates a new function, also from \lstinline{[10]} onto itself.
 
-As mentioned in section \ref{CALLREF}, the constraints of a function are not called unless the function is fully substantiated. The following program produces a valid proof.
+As mentioned in section \ref{CALLREF}, the constraints of a function are not called unless the function is fully instantiated. The following program produces a valid proof.
 
 \begin{lstlisting}[language=Python]
   def f x y = {0 = 1; x};
@@ -483,8 +483,8 @@ There are many higher-order combinators that may be useful for some applications
 \begin{lstlisting}[language=Python]
   (fun x {x}) 15 = 15;
   (fun x y {x + y}) 15 20 = 35;
+  (fun (x, y) {x + y}) (15, 3) = 18;
   flip (fun x y {x - y}) 15 3 = (-12);
-  (fun (x, y) {x + y}) 15 3 = 18;
 \end{lstlisting}
 
 Notice that one can bind multiple arguments and pattern match on tuples using anonymous functions. These can also be used as return values in definitions.
