@@ -1,3 +1,116 @@
 \section{Appendix A: Cookbook}
 
-Get a load of these delicious recipes... \textcolor{red}{[TODO]}
+\subsection{Polynomial Logic}
+
+The most basic technique for creating propositions in arithmetic circuits is to manipulate polynomials so they have specific roots. The most basic equations are simply checking that a number is a constant, such as;
+
+\begin{lstlisting}[language=Python]
+  x = 5;
+\end{lstlisting}
+
+However, what if one wanted to say that something is either 5 \textit{or} 6? One can reformulate each as \lstinline{(x - 5) = 0} and \lstinline{(x - 6) = 0}. These polynomials can then be multiplied into;
+
+\begin{lstlisting}[language=Python]
+  (x - 5) * (x - 6) = 0;
+\end{lstlisting}
+
+creating our disjunctive constraint. Similarly, if one have two polynomials, \lstinline{p} and \lstinline{q} which must both be equal to \lstinline{0}, one can form the constraint
+
+\begin{lstlisting}[language=Python]
+  p^2 + q^2 = 0;
+\end{lstlisting}
+
+The reason one needs to square the values is so that \lstinline{p}'s (possibly negative) value doesn't cancel out \lstinline{q}'s (also possibly negative) value. There's also the caveat that squaring and adding very large values could cause those values to exceed the size of the underlying field, so a range check or some other guarantee may need to be made for this to be valid. In most cases, anyone is better off simply stating \lstinline{p = 0} and \lstinline{q = 0} as separate constraints.
+
+This basic idea where one treats \lstinline{0} as denoting truth and use any non-zero value to denote falsity can be extended to a variety of logical operations. Contrast this with the usual presentation of boolean logic, where \lstinline{0} if false and \lstinline{1} is true. 
+
+\subsection{Boolean Logic}
+
+One can easily check that a value is a boolean by checking if it's either \lstinline{0} or \lstinline{1}.
+
+\begin{lstlisting}[language=Python]
+  def isBool x = (x * (1 - x) = 0);
+\end{lstlisting}
+
+If one already knows a value is a boolean, they can perform all the standard boolean operations;
+
+\begin{lstlisting}[language=Python]
+  def negb x = 1 - x;
+  def andb x y = x * y;
+  def orb x y = negb (andb (negb x) (negb y));
+\end{lstlisting}
+
+Possibly the most basic predicate over numbers is equality. While this can be checked with \lstinline{=}, one may need to represent the result with a boolean value instead for later complication. One can test if a number is \lstinline{0} with the following modification of the program appearing in section \ref{GW}.
+
+\begin{lstlisting}[language=Python]
+  def isZero x = {
+    def xi = fresh (1 | x);
+    x * (1 - xi * x) = 0;
+    1 - xi * x
+  };
+\end{lstlisting}
+
+One can then define an equality predicate as
+
+\begin{lstlisting}[language=Python]
+  def equal x y = isZero (x - y);
+\end{lstlisting}
+
+Through a slight modification, inequality can also be defined.
+
+\subsection{Range Checks and Bit Decomposition}
+
+One of the most common, and also heaviest, operations necessary for the execution of regular programs is bit decomposition, where a number is decomposed into the binary bits making it up. One of the most common operations necessary for basic arithmetic is checking that a number is within a certain range. Both of these operations are typically done simultaneously. If a number can be decomposed into 8 bits, then it must be in the range $[0, 2^8)$.
+
+To get the nth bit of a number, one merely needs to integer-divide by $2^{n-1}$, then mod by $2$. Repeating this for every bit one cares about will get us the full decomposition.
+
+\begin{lstlisting}[language=Python]
+  def decomp8 x = {
+    def x0 = fresh ((x\2^0) % 2); isBool x0;
+    def x1 = fresh ((x\2^1) % 2); isBool x1;
+    def x2 = fresh ((x\2^2) % 2); isBool x2;
+    def x3 = fresh ((x\2^3) % 2); isBool x3;
+    def x4 = fresh ((x\2^4) % 2); isBool x4;
+    def x5 = fresh ((x\2^5) % 2); isBool x5;
+    def x6 = fresh ((x\2^6) % 2); isBool x6;
+    def x7 = fresh ((x\2^7) % 2); isBool x7;
+    x = x0 + 2*x1 + 2^2*x2 + 2^3*x3 + 2^4*x4 + 2^5*x5 + 2^6*x6 + 2^7*x7;
+    (x0, x1, x2, x3, x4, x5, x6, x7)
+};
+\end{lstlisting}
+
+Notice that each bit is actually checked to ensure it's a boolean. Additionally, we check that the decomposition is correct prior to returning the tuple. This implementation returns bits in little-endian format, though this can easily be changed to suit the needs of the user.
+
+By modifying the input number prior to checking the range, the range can be modified. For example, the following checks that something is in the range $[-2^7, 2^7)$
+
+\begin{lstlisting}[language=Python]
+def intDecomp8 x = {
+  decomp8 (x + 2^7)
+};
+\end{lstlisting}
+
+This will return what is \textit{almost} the two's complement representation. The main difference is that the last bit, indicating the sign, is the opposite of what it is in usual presentations of two's complement. With it, the sign of a number can be checked.
+
+\begin{lstlisting}[language=Python]
+def isNegative8 a = {
+  def (a0, a1, a2, a3, a4, a5, a6, a7) = intDecomp8 a;
+  1 - a7
+};
+\end{lstlisting}
+
+and one can further check if one number is less than another. The following will act as a valid $<$ indicator, so long as both \lstinline{x} and \lstinline{y} are in the range $[-2^6, 2^6)$.
+
+\begin{lstlisting}[language=Python]
+def less8 a b = isNegative8 (a - b);
+\end{lstlisting}
+
+Using these range checks, an arbitrary range whose width is less than the original can be checked via overlapping checks. The following will check that a number, \lstinline{x}, is within $[a, b)$, so long as $b > a$ and $b - a < 2^8$.
+
+\begin{lstlisting}[language=Python]
+def range8 x a b = {
+    decomp8 (x - a); // check x in [a, 2^8 + a)
+    decomp8 (x + 2^8 - b); // check x in [b - 2^8, b)
+};
+\end{lstlisting}
+
+

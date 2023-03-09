@@ -606,7 +606,7 @@ One can define many well-founded recursive functions this way.
 \begin{lstlisting}[language=Python]
   def append l1 l2 = fun n c { l1 (l2 n c) c };
 
-  def map f l = fun n c { l n (fun x xs { c (f x) xs }) };
+  def map f l n c = l n (fun x xs { c (f x) xs });
 \end{lstlisting}
 
 One cannot define generic translations between lists and built-in tuples, so a bespoke method must be made for each length. But only the translations need to be length-specific. The operations over lists can be generic.

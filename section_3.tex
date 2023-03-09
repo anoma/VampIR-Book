@@ -142,24 +142,24 @@ taking the modulus by a negative will usually end up doing nothing as it's inter
 
 \subsection{Gating Witnesses} \label{GW}
 
-By default, any circuit we generate will not know anything about fresh witnesses. They are just numbers, unless we add additional constraints to give them meaning. Consider this function which indicates if a number is zero or not
+By default, any circuit we generate will not know anything about fresh witnesses. They are just numbers, unless we add additional constraints to give them meaning. Consider this function which indicates if a number is not zero.
 
 \begin{lstlisting}[language=Python]
-  def isZero x = 1 - fresh (1 | x) * x;
+  def isntZero x = fresh (1 | x) * x;
   
-  isZero ((-1)) = 0;
-  isZero 0 = 1;
-  isZero 1 = 0;
-  isZero 2 = 0;
+  isntZero ((-1)) = 1;
+  isntZero 0 = 0;
+  isntZero 1 = 1;
+  isntZero 2 = 1;
 \end{lstlisting}
 
-While this generates a valid proof, what is it proving? Essentially just that 0 = 0 and 1 = 1. Since the correctness of \lstinline{isZero} isn't actually checked, we haven't actually proved that the answers are correct, even though we've calculated them correctly. We can fix this by adding additional constraints.
+While this generates a valid proof, what is it proving? Essentially just that we know of inverses for -1, 1, and 2, as well as a number which is 0 when multiplied by 0. Since the correctness of \lstinline{isntZero} isn't actually checked, we haven't actually proved that any of these numbers are or aren't 0, even though we've calculated the answer correctly. We can fix this by adding additional constraints.
 
 \begin{lstlisting}[language=Python]
-  def isZero x = {
+  def isntZero x = {
     def xi = fresh (1 | x);
     x * (1 - xi * x) = 0;
-    1 - xi * x
+    xi * x
   };
 \end{lstlisting}
 
