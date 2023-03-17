@@ -269,13 +269,9 @@ will create a valid proof. This is because \lstinline|15 % 9| can be immediately
 will generate an error during circuit creation informing us that the modulus is not a supported constraint.
 
 
-
-
-
-
 \subsection{Tuples} \label{TUP}
 
-The only first-order data structure provided in \vampir\ is the tuple. One can use them in place of numbers to check multiple things in parallel.
+One of the few first-order data structures provided in \vampir\ is the tuple. One can use them in place of numbers to check multiple things in parallel.
 
 \begin{lstlisting}[language=Python]
   def xs = (1, 2);
@@ -286,7 +282,7 @@ The only first-order data structure provided in \vampir\ is the tuple. One can u
 During type checking, \lstinline{xs}'s type is given as
 
 \begin{lstlisting}[language=bash]
-  > xs[2]: (int, int)
+  > xs: (int, int)
 \end{lstlisting}
 
 This indicates that \lstinline{xs} is a pair of integers. One can also iterate tuples as much as they want.
@@ -397,7 +393,7 @@ Using units, one can design some of our functions to act like list manipulation 
   zip (1, 2, 3, 4, 5, ()) (6, 7, 8, ()) = ((1, 6), (2, 7), ());
 \end{lstlisting}
 
-\vampir\ ultimately generates a fixed, finite data structure, meaning that there can't be a proper variable-length list type. As such, many list manipulation programs that one might take for granted can't be defined in full generality in \vampir. However, this technique can recover some of that functionality in practice.
+\vampir\ ultimately generates a fixed, finitely iterated data type, meaning we cannot treat iterated tuples as a proper list type. As such, many list manipulation programs that one might take for granted can't be defined in full generality using tuples. However, this technique can recover some of that functionality in practice. Proper lists are available, see section \ref{LIST}.
 
 Witness solicitation interacts in a somewhat interesting way with pairs. If one compiles the program
 
@@ -419,7 +415,103 @@ Without a variable-free first-order datatype for each uninstantiated variable, c
 
 
 
+\subsection{The Iter Function} \label{ITER}
 
+Frequently, we will want to repeat a function over and over again. \vampir\ includes the \lstinline{iter} function for this exact purpose. It takes three arguments;
+
+\begin{itemize}
+\item A non-negative constant.
+\item A function to iterate.
+\item An argument to iterate on.
+\end{itemize}
+
+For example, if the exponential function was not already built-in, we could implement it via \lstinline{iter}.
+
+\begin{lstlisting}[language=Python]
+    def exp_rec m r = m * r;
+    def exp m n = iter n (exp_rec m) 1;
+    
+    exp 3 2 = 9;
+\end{lstlisting}
+
+\lstinline{iter} must be able to be unfolded at circuit-generation time, meaning the constant cannot be a field element that would be decided at proving time. \lstinline{iter x f 3} for an unbound \lstinline{x} will give an error indicating that \lstinline{x} must be a constant.
+
+The main limitation of \lstinline{iter} is that the function has to take a (simply typed) X and produce another X. If the input and output types do not match, we will get a typing error. This largely prevents useful interactions between \lstinline{iter} and tuples. For example, trying the following
+
+\begin{lstlisting}[language=Python]
+  iter 2 tail (1, 2, 3, 4, ());
+\end{lstlisting}
+
+will yield an error indicating that \lstinline{([138], [137])} cannot unify with \lstinline{[137]}. This tells us that the input and output types to \lstinline{tail} cannot be made the same; the input must be a tuple, \lstinline{([138], [137])}, while the output must be of the same type as the second element of the tuple, \lstinline{[137]}.
+
+\subsection{Lists} \label{LIST}
+
+\vampir\ provides built-in lists which can be manipulated in a way that's akin to lists in functional languages like Haskell or ML. The empty list is denoted \lstinline{[]} while list constructors are denoted \lstinline{:}. There is no syntax sugar for lists, so one must explicitly end them with \lstinline{[]}.
+
+\begin{lstlisting}[language=Python]
+  def exList = 1:2:3:[];
+
+  exList = 1:2:3:[];
+\end{lstlisting}
+
+As you can see, we can check multiple things in parallel, just like with tuples. The main difference is in the type. During proof generation, we should see the following;
+
+\begin{lstlisting}[language=bash]
+  > exList: [int]
+\end{lstlisting}
+
+The square braces indicate that \lstinline{exList} is a list of \lstinline{int}s. This is, of course, not to be confused with the square braces which also surround type variables. A list of variable type will have two layers of square braces. Unlike with tuples, every entry is assumed to have the same type. This allows for type-safe interoperability with \lstinline{iter}.
+
+\begin{lstlisting}[language=Python]
+  def hd (h:t) = h;
+  def tl (h:t) = t;
+  def nth l n = hd (iter n tl l);
+
+  nth (1:2:3:4:[]) 2 = 3;
+\end{lstlisting}
+
+As you can see, we can pattern match on lists just like we can with tuples. There is no way to case on lists, instead, it's up to the programmer to ensure all patterns are valid. If one tries \lstinline{hd []}, they will get an error during circuit generation indicating that the pattern \lstinline{(h : t)} cannot match \lstinline{[]}.
+
+This does not mean, however, that one must always indicate the length of the list when recursing over a list. Instead, \vampir\ provides the \lstinline{fold} functions for recursing over lists. \lstinline{fold} is equivalent to right-folding functions, such as \lstinline{foldr}, common to functional programming languages. It takes three arguments;
+
+
+\begin{itemize}
+\item A base value to return on an empty list.
+\item A function which incorporates an element of the list with the recursive 
+\item A list to fold over.
+\end{itemize}
+
+As a basic example, we can sum over the elements of a list with
+
+\begin{lstlisting}[language=Python]
+  def plus x y = x + y;
+  def sum l = fold 0 plus l;
+
+  sum (1:2:3:4:[]) = 10;
+\end{lstlisting}
+
+With these in place, most common list manipulation functions can be defined.
+
+\begin{lstlisting}[language=Python]
+  def cons x y = x:y;
+  def append xs = fold xs cons;
+  
+  def take_rec take (h:t) = h:(take t);
+  def take n = iter n take_rec (fun x {[]});
+  
+  def map_rec f x acc = (f x):acc;
+  def map f xs = fold xs (map_rec f) [];
+
+  def zip_rec x z (y:ys) = (x, y):(z ys);
+  def zip xs = fold xs zip_rec (fun x {[]});
+  
+  def zipWith_rec f x z (y:ys) = (f x y):(z ys);
+  def zipWith f xs = fold xs (zipWith_rec f) (fun x {[]});
+\end{lstlisting}
+
+There are some limitations that aren't present in most languages. Lists cannot be directly compared. Instead, list comparisons will be zipped into underlying field comparisons. If this isn't possible, an error will occur as a field element will try to be compared to nothing. \lstinline{1:[] = 1:2:[]}, for example, won't create an invalid proof; rather, we'll get an error indicating the equality is simply invalid.
+
+Unlike with tuples, one cannot use them for witness solicitation. \lstinline{x = 1:2:3:[];} for an unbounded \lstinline{x} will produce an error indicating that \lstinline{x} is an undefined list.
 
 
 \subsection{Higher-Order Functions} \label{HOF}
@@ -457,7 +549,7 @@ Looking at the types;
   > f[4]: app2[4]: (([10] -> [10]) -> ([10] -> [10]))
 \end{lstlisting}
 
-one can see that \lstinline{app2} takes a function from the (variable) type \lstinline{[10]} onto itself, and creates a new function, also from \lstinline{[10]} onto itself.
+one can see that \lstinline{app2} takes a function from the (variable) type \lstinline{[10]} onto itself, and creates a new function, also from \lstinline{[10]} onto itself. At this point, it may be clear that \lstinline{iter}, and, in fact, \lstinline{fold} as well, are examples of higher-order functions.
 
 As mentioned in section \ref{CALLREF}, the constraints of a function are not called unless the function is fully instantiated. The following program produces a valid proof.
 
@@ -521,25 +613,12 @@ One can also create functions to curry and uncurry our functions
   curry (fun (x, y) {x + y}) 3 4 = uncurry (fun x y {x + y}) (3, 4);
 \end{lstlisting}
 
-More generic functions can be defined over tuples;
-
-\begin{lstlisting}[language=Python]
-  def map f (x, y, z) = (f x, f y, f z);
-  def zipWith f (x, y, z) (a, b, c) = (f x a, f y b, f z c);
-  def fold f d (x, y, z) = f x (f y (f z d));
-  
-  fold (fun x y {x + y}) 0
-       (zipWith (fun x y {x - y}) 
-                (map (fun x {3*x}) (1, 2, 3)) 
-                (4, 5, 6)) = 3;
-\end{lstlisting}
-
 \vampir\ does not give unrestricted access to higher-order functions; any appearing in a program must be simply typable. For example, \lstinline|fun x { x x };| will produce a typing error. This means that, in particular, one cannot define a fixed-point combinator, which would be necessary to implement general recursion. Still, there are many powerful techniques made available by what is given. In particular, one can define and utilize lambda-encoded data.
 
 If \vampir\ didn't already have built-in pairs, one could implement them as
 
 \begin{lstlisting}[language=Python]
-  def pair x y = fun p { p x y };
+  def pair x y p = p x y;
 \end{lstlisting}
 
 By issuing different arguments to \lstinline|pair x y|, one can get the underlying components.
@@ -586,16 +665,39 @@ Functions converting between the two formats can also easily be defined;
   (1, 2) = upair (pair 1 2);
 \end{lstlisting}
 
-This is all interesting but doesn't give us anything that wasn't already provided. However, a variant of this idea can encode arbitrary length lists.
+This is all interesting but doesn't give us anything that wasn't already provided. However, a variant of this idea can encode more datatypes. For example, we can encode maybe/option types;
 
 \begin{lstlisting}[language=Python]
-  def nil = fun n c {n};
-  def cons x xs = fun n c {c x (xs n c)};
+  def nothing n j = n;
+  def just x n j = j x;
 
-  def ex_list = cons 1 (cons 2 (cons 3 nil));
+  def maybe d m = m d (fun x {x});
 \end{lstlisting}
 
-The utility of this construction is that the length of the list is not encoded in the structure of the type, so it can be arbitrarily long. One can also issue arguments into the list, which represents folding a function over the list.
+We can also encode coproducts, allowing us to emulate branching programs, at least during circuit generation.
+
+\begin{lstlisting}[language=Python]
+  def inl x l r = l x;
+  def inr x l r = r x;
+
+  def case f g c = c f g;
+
+  case (fun x {x + 1}) (fun x {x + 2}) (inl 0) = 1;
+  case (fun x {x + 1}) (fun x {x + 2}) (inr 0) = 2;
+\end{lstlisting}
+
+If they didn't already exist, we could implement lists as well through this method.
+
+\begin{lstlisting}[language=Python]
+  def nil n c = n;
+  def cons x xs n c = c x (xs n c);
+
+  def ex_list = cons 1 (cons 2 (cons 3 nil));
+  // Same as
+  def ex_list2 n c = c 1 (c 2 (c 3 n));
+\end{lstlisting}
+
+One can also issue arguments into the list, whose structure explicitly represents folding a function over the list.
 
 \begin{lstlisting}[language=Python]
   ex_list 0 (fun x y {x + y}) = 6;
@@ -639,6 +741,6 @@ One cannot define generic translations between lists and built-in tuples, so a b
   sum (tup2list_4 (1, 2, 3, 4)) = 10;
 \end{lstlisting}
 
-Other variants of this construction could be made. Any kind of well-founded tree can be encoded and folded over via similar methods. This opens the door to many powerful functional programming techniques, including free monads, for example.
+This method is limited by the simple type system of \vampir. While taking the head and tail of these kinds of lists is possible, iterating such a function cannot type check. This prevents us from defining analogs of \lstinline|nth| in a type-safe manner. Nonetheless, this technique is useful for cases where we only need to fold over a tree-like structure to produce first-order data. Any kind of well-founded tree can be encoded and folded over via similar methods. This opens the door to many powerful functional programming techniques, including free monads, for example.
 
 It should be noted that there are some fundamental limitations to this method. Mainly, it can't interact non-trivially with the underlying field. One cannot, for example, translate a field element into a Church-encoded number or a boolean. While one can certainly implement those in \vampir\ (in fact, \lstinline|app2| from earlier is a Church numeral, and \lstinline|const| is a Church boolean), they cannot be used to actually reason about field elements. The methods described in this section are exclusively useful for data \textbf{structure} manipulation, but not data manipulation in general. This is because data structures are fixed at circuit generation time, but field values are not completely fixed until proof generation, which occurs after circuit generation. This implies that the circuit's structure cannot depend on field values.

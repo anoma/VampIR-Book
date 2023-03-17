@@ -76,7 +76,9 @@ To get the nth bit of a number, one merely needs to integer-divide by $2^{n-1}$,
     def x7 = fresh ((x\2^7) % 2); isBool x7;
     x = x0 + 2*x1 + 2^2*x2 + 2^3*x3 + 2^4*x4 + 2^5*x5 + 2^6*x6 + 2^7*x7;
     (x0, x1, x2, x3, x4, x5, x6, x7)
-};
+  };
+
+  decomp8 166 = (0, 1, 1, 0, 0, 1, 0, 1);
 \end{lstlisting}
 
 Notice that each bit is actually checked to ensure it's a boolean. Additionally, we check that the decomposition is correct prior to returning the tuple. This implementation returns bits in little-endian format, though this can easily be changed to suit the needs of the user.
@@ -84,33 +86,45 @@ Notice that each bit is actually checked to ensure it's a boolean. Additionally,
 By modifying the input number prior to checking the range, the range can be modified. For example, the following checks that something is in the range $[-2^7, 2^7)$
 
 \begin{lstlisting}[language=Python]
-def intDecomp8 x = {
-  decomp8 (x + 2^7)
-};
+  def intDecomp8 x = {
+    decomp8 (x + 2^7)
+  };
 \end{lstlisting}
 
 This will return what is \textit{almost} the two's complement representation. The main difference is that the last bit, indicating the sign, is the opposite of what it is in usual presentations of two's complement. With it, the sign of a number can be checked.
 
 \begin{lstlisting}[language=Python]
-def isNegative8 a = {
-  def (a0, a1, a2, a3, a4, a5, a6, a7) = intDecomp8 a;
-  1 - a7
-};
+  def isNegative8 a = {
+    def (a0, a1, a2, a3, a4, a5, a6, a7) = intDecomp8 a;
+    1 - a7
+  };
 \end{lstlisting}
 
 and one can further check if one number is less than another. The following will act as a valid $<$ indicator, so long as both \lstinline{x} and \lstinline{y} are in the range $[-2^6, 2^6)$.
 
 \begin{lstlisting}[language=Python]
-def less8 a b = isNegative8 (a - b);
+  def less8 a b = isNegative8 (a - b);
 \end{lstlisting}
 
-Using these range checks, an arbitrary range whose width is less than the original can be checked via overlapping checks. The following will check that a number, \lstinline{x}, is within $[a, b)$, so long as $b > a$ and $b - a < 2^8$.
+Using these range checks, an arbitrary range whose width is less than twice the original can be checked via overlapping checks. The following will check that a number, \lstinline{x}, is within $[a, b)$, so long as $b > a$ and $b - a < 2^9$.
 
 \begin{lstlisting}[language=Python]
-def range8 x a b = {
+  def range8 x a b = {
     decomp8 (x - a); // check x in [a, 2^8 + a)
-    decomp8 (x + 2^8 - b); // check x in [b - 2^8, b)
-};
+    decomp8 (x + 2^8 - b) // check x in [b - 2^8, b)
+  };
 \end{lstlisting}
 
+We can automatically generate bit decompositions using \lstinline{iter}.
 
+\begin{lstlisting}[language=Python]
+  def decomp_rec bits a = {
+    def a0 = fresh (a%2); isBool a0;
+    def a1 = fresh (a\2);
+    a = a0 + 2*a1;
+    (a0 : bits a1)
+  };
+  def decomp n = iter n decomp_rec (fun x {[]});
+
+  decomp 8 166 = 0:1:1:0:0:1:0:1:[];
+\end{lstlisting}
