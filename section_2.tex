@@ -711,36 +711,22 @@ One can define many well-founded recursive functions this way.
   def map f l n c = l n (fun x xs { c (f x) xs });
 \end{lstlisting}
 
-One cannot define generic translations between lists and built-in tuples, so a bespoke method must be made for each length. But only the translations need to be length-specific. The operations over lists can be generic.
+We can easily convert between built-in lists and encoded ones.
 
 \begin{lstlisting}[language=Python]
-  def tup2list_2 (x1, x2) = fun n c {c x1 (c x2 n)};
-  def tup2list_3 (x1, x2, x3) = fun n c {c x1 (c x2 (c x3 n))};
-  def tup2list_4 (x1, x2, x3, x4) = fun n c {c x1 (c x2 (c x3 (c x4 n)))};
+  llist l = fold nil cons l;
+  ulist l = l [] (fun x y {x:y});
 
-  def replaceFst a (x, y) = (a, y);
-
-  def rotate_2 (x1, x2) = (x2, x1);
-  def rotate_3 (x1, x2, x3) = (x3, x1, x2);
-  def rotate_4 (x1, x2, x3, x4) = (x4, x1, x2, x3);
-
-  def list2tup_2 l = l (0, 0) 
-                       (fun x xs {replaceFst x (rotate_2 xs)});
-  def list2tup_3 l = l (0, 0, 0) 
-                       (fun x xs {replaceFst x (rotate_3 xs)});
-  def list2tup_4 l = l (0, 0, 0, 0) 
-                       (fun x xs {replaceFst x (rotate_4 xs)});
-
-  list2tup_2 (tup2list_2 (1, 2)) = (1, 2);
-  list2tup_3 (tup2list_3 (1, 2, 3)) = (1, 2, 3);
-  list2tup_4 (tup2list_4 (1, 2, 3, 4)) = (1, 2, 3, 4);
-
-  def sum l = l 0 (fun x y {x + y});
-  sum (tup2list_2 (1, 2)) = 3;
-  sum (tup2list_3 (1, 2, 3)) = 6;
-  sum (tup2list_4 (1, 2, 3, 4)) = 10;
+  ulist (llist (1:2:3:4:[])) = 1:2:3:4:[];
 \end{lstlisting}
 
-This method is limited by the simple type system of \vampir. While taking the head and tail of these kinds of lists is possible, iterating such a function cannot type check. This prevents us from defining analogs of \lstinline|nth| in a type-safe manner. Nonetheless, this technique is useful for cases where we only need to fold over a tree-like structure to produce first-order data. Any kind of well-founded tree can be encoded and folded over via similar methods. This opens the door to many powerful functional programming techniques, including free monads, for example.
+This method is limited by the simple type system of \vampir. While taking the head and tail of these kinds of lists is possible without first converting to a normal list, iterating such a function cannot type check. This prevents us, for example, from defining analogs of \lstinline|nth| in a type-safe manner. Nonetheless, this technique is useful for cases where we only need to fold over a tree-like structure to produce first-order data. Any kind of well-founded tree can be encoded and folded over via similar methods. For example, binary trees can be encoded using;
+
+\begin{lstlisting}[language=Python]
+  def leaf lf br = l;
+  def branch l r lf br = br l r;
+\end{lstlisting}
+
+This opens the door to many powerful functional programming techniques, including free monads, for example.
 
 It should be noted that there are some fundamental limitations to this method. Mainly, it can't interact non-trivially with the underlying field. One cannot, for example, translate a field element into a Church-encoded number or a boolean. While one can certainly implement those in \vampir\ (in fact, \lstinline|app2| from earlier is a Church numeral, and \lstinline|const| is a Church boolean), they cannot be used to actually reason about field elements. The methods described in this section are exclusively useful for data \textbf{structure} manipulation, but not data manipulation in general. This is because data structures are fixed at circuit generation time, but field values are not completely fixed until proof generation, which occurs after circuit generation. This implies that the circuit's structure cannot depend on field values.
