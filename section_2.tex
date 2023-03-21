@@ -507,6 +507,10 @@ With these in place, most common list manipulation functions can be defined.
   
   def zipWith_rec f x z (y:ys) = (f x y):(z ys);
   def zipWith f xs = fold xs (zipWith_rec f) (fun x {[]});
+
+  def reverse = fold [] (fun x r { append r (x:[]) });
+
+  def last l = hd (reverse l);
 \end{lstlisting}
 
 There are some limitations that aren't present in most languages. Lists cannot be directly compared. Instead, list comparisons will be zipped into underlying field comparisons. If this isn't possible, an error will occur as a field element will try to be compared to nothing. \lstinline{1:[] = 1:2:[]}, for example, won't create an invalid proof; rather, we'll get an error indicating the equality is simply invalid.
@@ -723,8 +727,8 @@ We can easily convert between built-in lists and encoded ones.
 This method is limited by the simple type system of \vampir. While taking the head and tail of these kinds of lists is possible without first converting to a normal list, iterating such a function cannot type check. This prevents us, for example, from defining analogs of \lstinline|nth| in a type-safe manner. Nonetheless, this technique is useful for cases where we only need to fold over a tree-like structure to produce first-order data. Any kind of well-founded tree can be encoded and folded over via similar methods. For example, binary trees can be encoded using;
 
 \begin{lstlisting}[language=Python]
-  def leaf lf br = l;
-  def branch l r lf br = br l r;
+  def leaf lf br = lf;
+  def branch l r lf br = br (l lf br) (r lf br);
 \end{lstlisting}
 
 This opens the door to many powerful functional programming techniques, including free monads, for example.

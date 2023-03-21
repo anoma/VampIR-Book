@@ -24,6 +24,18 @@ The reason one needs to square the values is so that \lstinline{p}'s (possibly n
 
 This basic idea where one treats \lstinline{0} as denoting truth and use any non-zero value to denote falsity can be extended to a variety of logical operations. Contrast this with the usual presentation of boolean logic, where \lstinline{0} if false and \lstinline{1} is true. 
 
+We can easily define higher-order functions which can combine polynomials the same way we might combine field elements.
+
+\begin{lstlisting}[language=Python]
+  def const x y = x;
+  def id x = x;
+  def sum p q x = p x + q x;
+  def prod p q x = p x * q x;
+  def comp p q x = p (q x);
+  def sub p q x = p x - q x;
+  def div p q x = p x / q x;
+\end{lstlisting}
+
 \subsection{Boolean Logic}
 
 One can easily check that a value is a boolean by checking if it's either \lstinline{0} or \lstinline{1}.
@@ -38,6 +50,18 @@ If one already knows a value is a boolean, they can perform all the standard boo
   def negb x = 1 - x;
   def andb x y = x * y;
   def orb x y = negb (andb (negb x) (negb y));
+\end{lstlisting}
+
+Rather than defining boolean functions, we may also define full constraints which may be more efficient for some operations. For example, the constraint $x \oplus y = z$, where $\oplus$ represents the xor function, can be implemented as;
+
+\begin{lstlisting}[language=Python]
+  def xor x y z = 2 * x * y = x + y - z;
+\end{lstlisting}
+
+We can define a selection constraint, \lstinline{b ? x : y = z}, via;
+
+\begin{lstlisting}[language=Python]
+  def select b x y z = b * (y - x) = (y - z);
 \end{lstlisting}
 
 Possibly the most basic predicate over numbers is equality. While this can be checked with \lstinline{=}, one may need to represent the result with a boolean value instead for later complication. One can test if a number is \lstinline{0} with the following modification of the program appearing in section \ref{GW}.
@@ -57,6 +81,8 @@ One can then define an equality predicate as
 \end{lstlisting}
 
 Through a slight modification, inequality can also be defined.
+
+
 
 \subsection{Range Checks and Bit Decomposition}
 
@@ -83,38 +109,6 @@ To get the nth bit of a number, one merely needs to integer-divide by $2^{n-1}$,
 
 Notice that each bit is actually checked to ensure it's a boolean. Additionally, we check that the decomposition is correct prior to returning the tuple. This implementation returns bits in little-endian format, though this can easily be changed to suit the needs of the user.
 
-By modifying the input number prior to checking the range, the range can be modified. For example, the following checks that something is in the range $[-2^7, 2^7)$
-
-\begin{lstlisting}[language=Python]
-  def intDecomp8 x = {
-    decomp8 (x + 2^7)
-  };
-\end{lstlisting}
-
-This will return what is \textit{almost} the two's complement representation. The main difference is that the last bit, indicating the sign, is the opposite of what it is in usual presentations of two's complement. With it, the sign of a number can be checked.
-
-\begin{lstlisting}[language=Python]
-  def isNegative8 a = {
-    def (a0, a1, a2, a3, a4, a5, a6, a7) = intDecomp8 a;
-    1 - a7
-  };
-\end{lstlisting}
-
-and one can further check if one number is less than another. The following will act as a valid $<$ indicator, so long as both \lstinline{x} and \lstinline{y} are in the range $[-2^6, 2^6)$.
-
-\begin{lstlisting}[language=Python]
-  def less8 a b = isNegative8 (a - b);
-\end{lstlisting}
-
-Using these range checks, an arbitrary range whose width is less than twice the original can be checked via overlapping checks. The following will check that a number, \lstinline{x}, is within $[a, b)$, so long as $b > a$ and $b - a < 2^9$.
-
-\begin{lstlisting}[language=Python]
-  def range8 x a b = {
-    decomp8 (x - a); // check x in [a, 2^8 + a)
-    decomp8 (x + 2^8 - b) // check x in [b - 2^8, b)
-  };
-\end{lstlisting}
-
 We can automatically generate bit decompositions using \lstinline{iter}.
 
 \begin{lstlisting}[language=Python]
@@ -128,3 +122,51 @@ We can automatically generate bit decompositions using \lstinline{iter}.
 
   decomp 8 166 = 0:1:1:0:0:1:0:1:[];
 \end{lstlisting}
+
+By modifying the input number prior to checking the range, the range can be modified. For example, the following checks that something is in the range $[-2^7, 2^7)$
+
+\begin{lstlisting}[language=Python]
+  def intDecomp n x = decomp n (x + 2^n);
+
+  intDecomp 8 ((-55)) = 1:0:0:1:0:0:1:1:[];
+\end{lstlisting}
+
+This will return what is \textit{almost} the two's complement representation. The main difference is that the last bit, indicating the sign, is the opposite of what it is in usual presentations of two's complement. With it, the sign of a number can be checked.
+
+\begin{lstlisting}[language=Python]
+  def isNegative n a = last (intDecomp n a);
+  def isPositive n a = 1 - last (intDecomp n (a-1));
+\end{lstlisting}
+
+and one can further check if one number is less than another. The following will act as a valid $<$ indicator, so long as both \lstinline{x} and \lstinline{y} are in the range $[-2^{n-2}, 2^{n-2})$.
+
+\begin{lstlisting}[language=Python]
+  def less n a b = isNegative n (a - b);
+\end{lstlisting}
+
+Using these range checks, an arbitrary range whose width is less than twice the original can be checked via overlapping checks. The following will check that a number, \lstinline{x}, is within $[a, b)$, so long as $b > a$ and $b - a < 2^{n+1}$.
+
+\begin{lstlisting}[language=Python]
+  def range n x a b = {
+    decomp n (x - a); // check x in [a, 2^n + a)
+    decomp n (x + 2^n - b) // check x in [b - 2^n, b)
+  };
+\end{lstlisting}
+
+\subsection{More Arithmetic}
+
+With range checks in place, we can get a more complete set of arithmetic operations. The division with remainder for positive $a$ and $b$ can be checked with the constraints;
+
+\begin{lstlisting}[language=Python]
+  def div_rem n a b = {
+    def q = fresh (a\b);
+    def r = fresh (a%b);
+    
+    isNegative n r = 0;  
+    less n r b = 1;
+    a = b * q + r;
+      
+    (q, r)
+  };
+\end{lstlisting}
+
