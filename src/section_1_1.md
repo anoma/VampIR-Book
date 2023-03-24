@@ -1,5 +1,3 @@
-# What is Vamp-IR?
-
 ## Why Vamp-IR?
 
 Vamp-IR is, at its core, a language for defining arithmetic circuits over finite fields. It's intended to be a universal intermediate language supporting many proof systems based on arithmetic circuits. Any higher-level language which intends to compile to arithmetic circuits may target Vamp-IR as an intermediate language. 
