@@ -97,7 +97,7 @@ During type checking, both variables are listed.
 
 The numbers next to the names are, in some sense, the "true" names of the variables. Each variable has a unique number identifying it, allowing the system to avoid confusing variables with the same name.
 
-\label{FSTUNIT}
+
 Equations can also appear in definitions. Definitions may or may not return a value and can act as gates for other values.
 
 ```haskell
@@ -118,7 +118,7 @@ Looking at the types, one sees something interesting.
 
 This illustrates that a Vamp-IR file does not need any top-level equations, but will still represent a proposition through the equations enforced by function calls. `g1 5;` will produce an invalid proof, in this case.
 
-\label{CALLREF}
+
 
 Equations aren't enforced if their parent function is never actually called.
 
@@ -142,7 +142,7 @@ isBool 0;
 isBool 1;
 ```
 
-\label{ARITHEX}
+
 There are a handful of additional arithmetic operators which may be used so long as the circuit can be transformed so they aren't referenced. These operators will be detailed in full in section on [expanded arithmetic](section_3_2.md). For now, the modulus, `%`, will be used as an example.
 
 ```haskell

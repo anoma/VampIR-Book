@@ -39,7 +39,7 @@ $ printf "def x = 10;\n\nx = 10;">examples/ex1.pir
 Notice the file ends with `.pir`, the standard extension for Vamp-IR files. To compile this into a PLONK circuit, one must first set up public parameters.
 
 ```bash
-$ target/debug/vamp-ir setup -o examples/params.pp
+$ target/debug/vamp-ir plonk setup -o examples/params.pp
 
 > * Setting up public parameters...
 > * Public parameter setup success!
@@ -48,9 +48,9 @@ $ target/debug/vamp-ir setup -o examples/params.pp
 This will create the file `params.pp` within our `examples` directory. The `-o` argument indicates an output file and is equivalent to `--output`. One can now create the circuit associated with our file.
 
 ```bash
-$ target/debug/vamp-ir compile -u examples/params.pp \
-                               -s examples/ex1.pir \
-                               -o examples/circuit.plonk
+$ target/debug/vamp-ir plonk compile -u examples/params.pp \
+                                     -s examples/ex1.pir \
+                                     -o examples/circuit.plonk
 
 > * Compiling constraints...
 > ** Inferring types...
@@ -68,9 +68,9 @@ Notice that types for defined expressions are inferred during compilation. Vamp-
 A zero-knowledge proof of circuit correctness can now be synthesized.
 
 ```bash
-$ target/debug/vamp-ir prove -u examples/params.pp \
-                   -c examples/circuit.plonk \
-                   -o examples/proof.plonk
+$ target/debug/vamp-ir plonk prove -u examples/params.pp \
+                                   -c examples/circuit.plonk \
+                                   -o examples/proof.plonk
 
 > * Reading arithmetic circuit...
 > * Soliciting circuit witnesses...
@@ -85,9 +85,9 @@ This will create our compiled proof in the file `proof.plonk` within the `exampl
 The last thing one may want to do is verify the circuit.
 
 ```bash
-$ target/debug/vamp-ir verify -u examples/params.pp \
-                    -c examples/circuit.plonk \
-                    -p examples/proof.plonk
+$ target/debug/vamp-ir plonk verify -u examples/params.pp \
+                                    -c examples/circuit.plonk \
+                                    -p examples/proof.plonk
 
 > * Reading arithmetic circuit...
 > * Reading zero-knowledge proof...

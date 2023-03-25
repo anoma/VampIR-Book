@@ -78,7 +78,7 @@ fst ((1, 2), 3) = (1, 2);
 
 Even though the same function is called on both lines, different types are returned each time. On the first line, it returns an integer while on the second it returns a pair.
 
-\label{UNITEXP}
+
 Vamp-IR also provides a 0-tuple denoted `()`, analogous to the return value of a unit type in many functional languages or a void type in many imperative languages. It's the closest thing to getting a function to return nothing.
 
 ```haskell

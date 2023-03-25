@@ -10,17 +10,17 @@ without declaring the value of `x`, Vamp-IR would interpret this unbound variabl
 
 ```bash
 $ printf "x = 10;">examples/ex2.pir
-$ target/debug/vamp-ir compile -u examples/params.pp \
-                               -s examples/ex2.pir \
-                               -o examples/circuit2.plonk
+$ target/debug/vamp-ir plonk compile -u examples/params.pp \
+                                     -s examples/ex2.pir \
+                                     -o examples/circuit2.plonk
 
 > * Compiling constraints...
 > [...]
 > * Constraint compilation success!
 
-$ target/debug/vamp-ir prove -u examples/params.pp \
-                             -c examples/circuit2.plonk \
-                             -o examples/proof2.plonk
+$ target/debug/vamp-ir plonk prove -u examples/params.pp \
+                                   -c examples/circuit2.plonk \
+                                   -o examples/proof2.plonk
 
 > * Reading arithmetic circuit...
 > * Soliciting circuit witnesses...
@@ -36,9 +36,9 @@ $ 9
 It asked for the private value for `x`, to which I input `9`. This should create an invalid proof this time as 9 does not equal 10. If one tries verifying the proof, they will observe that it's invalid.
 
 ```bash
-$ target/debug/vamp-ir verify -u examples/params.pp \
-                              -c examples/circuit2.plonk \
-                              -p examples/proof2.plonk
+$ target/debug/vamp-ir plonk verify -u examples/params.pp \
+                                    -c examples/circuit2.plonk \
+                                    -p examples/proof2.plonk
 
 > * Reading arithmetic circuit...
 > [...]
