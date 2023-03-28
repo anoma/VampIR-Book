@@ -31,7 +31,7 @@ Similar to the situation described in the section on [expanded arithmetic](secti
 
 will produce a valid circuit, even if `x` is a free variable which will be filled with a solicited witness.
 
-Note that fresh prevents the creation of constraints equating its generated value with the expression tree generating that value. It does not, however, remove other constraints produced inside of it. Consider the progam;
+Note that fresh prevents the creation of constraints equating its generated value with the expression tree generating that value. It does not, however, remove other constraints produced inside of it. Consider the program;
 
 ```haskell
 def c = { 1 = 0; 1 };
@@ -39,7 +39,7 @@ def c = { 1 = 0; 1 };
 1 = fresh c;
 ```
 
-This will produce an invalid proof. `fresh` does not erase constraints, but, rather, prevents new constraints from arising from expression trees.
+This will produce an invalid proof. `fresh` does not erase constraints, but, rather, prevents new constraints from arising from expressions directly under `fresh`.
 
 <p style="color:red;">Note: It seems to me that the restriction of exponentiation, that it cannot have variables in its exponent, should be lifted inside of fresh. Currently, it is not.</p>
 
