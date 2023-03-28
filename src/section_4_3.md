@@ -1,7 +1,7 @@
 # Bit Decomposition and Range Checks
-One of the most common, and also heaviest, operations necessary for the execution of regular programs is bit decomposition, where a number is decomposed into the binary bits making it up. One of the most common operations necessary for basic arithmetic is checking that a number is within a certain range. Both of these operations are typically done simultaneously. If a number can be decomposed into 8 bits, then it must be in the range $[0, 2^8)$.
+One of the most common, and also heaviest, operations necessary for the execution of regular programs is bit decomposition, where a number is decomposed into the binary bits making it up. One of the most common operations necessary for basic arithmetic is checking that a number is within a certain range. Both of these operations are typically done simultaneously. If a number can be decomposed into 8 bits, then it must be in the range \\([0, 2^8)\\).
 
-To get the nth bit of a number, one merely needs to integer-divide by $2^{n-1}$, then mod by $2$. Repeating this for every bit one cares about will get us the full decomposition.
+To get the nth bit of a number, one merely needs to integer-divide by \\(2^{n-1}\\), then mod by \\(2\\). Repeating this for every bit one cares about will get us the full decomposition.
 
 ```haskell
 def decomp8 x = {
@@ -36,7 +36,7 @@ def decomp n = iter n decomp_rec (fun x {[]});
 decomp 8 166 = 0:1:1:0:0:1:0:1:[];
 ```
 
-By modifying the input number prior to checking the range, the range can be modified. For example, the following checks that something is in the range $[-2^7, 2^7)$
+By modifying the input number prior to checking the range, the range can be modified. For example, the following checks that something is in the range \\([-2^7, 2^7)\\)
 
 ```haskell
 def intDecomp n x = decomp n (x + 2^n);
@@ -51,13 +51,13 @@ def isNegative n a = last (intDecomp n a);
 def isPositive n a = 1 - last (intDecomp n (a-1));
 ```
 
-and one can further check if one number is less than another. The following will act as a valid $<$ indicator, so long as both `x` and `y` are in the range $[-2^{n-2}, 2^{n-2})$.
+and one can further check if one number is less than another. The following will act as a valid \\(<\\) indicator, so long as both `x` and `y` are in the range \\([-2^{n-2}, 2^{n-2})\\).
 
 ```haskell
 def less n a b = isNegative n (a - b);
 ```
 
-Using these range checks, an arbitrary range whose width is less than twice the original can be checked via overlapping checks. The following will check that a number, `x`, is within $[a, b)$, so long as $b > a$ and $b - a < 2^{n+1}$.
+Using these range checks, an arbitrary range whose width is less than twice the original can be checked via overlapping checks. The following will check that a number, `x`, is within \\([a, b)\\), so long as \\(b > a\\) and \\(b - a < 2^{n+1}\\).
 
 ```haskell
 def range n x a b = {

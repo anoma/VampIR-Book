@@ -28,7 +28,7 @@ stating that the variable is, in fact, public. If one enters `1` here, during pr
 
 So the public inputs are shown explicitly.
 
-Public inputs \textit{must} be put at the start of a file. If one tries the following file;
+Public inputs *must* be put at the start of a file. If one tries the following file;
 
 ```haskell
 x = 1;
