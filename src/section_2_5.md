@@ -29,15 +29,15 @@ As you can see, we can pattern match on lists just like we can with tuples. Ther
 
 This does not mean, however, that one must always indicate the length of the list when recursing over a list. Instead, Vamp-IR provides the `fold` functions for recursing over lists. `fold` is equivalent to right-folding functions, such as `foldr`, common to functional programming languages. It takes three arguments;
 
-1. A base value to return on an empty list.
+1. A list to fold over.
 2. A function which incorporates an element of the list with the recursive 
-3. A list to fold over.
+3. A base value to return on an empty list.
 
 As a basic example, we can sum over the elements of a list with
 
 ```haskell
 def plus x y = x + y;
-def sum l = fold 0 plus l;
+def sum l = fold l plus 0;
 
 sum (1:2:3:4:[]) = 10;
 ```
@@ -46,7 +46,7 @@ With these in place, most common list manipulation functions can be defined.
 
 ```haskell
 def cons x y = x:y;
-def append xs = fold xs cons;
+def append xs l = fold xs cons l;
 
 def take_rec take (h:t) = h:(take t);
 def take n = iter n take_rec (fun x {[]});
@@ -60,7 +60,7 @@ def zip xs = fold xs zip_rec (fun x {[]});
 def zipWith_rec f x z (y:ys) = (f x y):(z ys);
 def zipWith f xs = fold xs (zipWith_rec f) (fun x {[]});
 
-def reverse = fold [] (fun x r { append r (x:[]) });
+def reverse l = fold l (fun x r { append r (x:[]) }) [];
 
 def last l = hd (reverse l);
 ```

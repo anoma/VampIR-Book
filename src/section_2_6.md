@@ -199,8 +199,8 @@ def map f l n c = l n (fun x xs { c (f x) xs });
 We can easily convert between built-in lists and encoded ones.
 
 ```haskell
-llist l = fold nil cons l;
-ulist l = l [] (fun x y {x:y});
+def llist l = fold l cons nil;
+def ulist l = l [] (fun x y {x:y});
 
 ulist (llist (1:2:3:4:[])) = 1:2:3:4:[];
 ```
