@@ -142,18 +142,21 @@ isBool 0;
 isBool 1;
 ```
 
-
-There are a handful of additional arithmetic operators which may be used so long as the circuit can be transformed so they aren't referenced. These operators will be detailed in full in section on [expanded arithmetic](section_3_2.md). For now, the modulus, `%`, will be used as an example.
-
-```haskell
-6 = 15 % 9;
-```
-
-will create a valid proof. This is because `15 % 9` can be immediately simplified into `6` during circuit generation. If one attempts to use an uninstantiated variable, that is one without a value defined in the file, they will get an error.
+Witnesses requiring solicitation may be created in definitions. For example;
 
 ```haskell
-6 = x % 9;
+def j x = x * y;
+
+j 5 = 20;
 ```
 
-will generate an error during circuit creation informing us that the modulus is not a supported constraint.
+will solicit a value for `y`. It's worth noting that witnesses are not tied to definition scopes; they are global, regardless of where they are referenced. This means that 
+
+```haskell
+def j x = x * y;
+
+j 5 = j 5;
+```
+
+will only solicit a single value for `y`, and that value will be used for both calls to `j`.
 

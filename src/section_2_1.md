@@ -15,8 +15,7 @@ The following example program demonstrates all the number notations.
 ```haskell
 0xee9a592ba9a9518 = 1074572035719075096;
 1074572035719075096 = 0o73515131127246512430;
-0o73515131127246512430 =
-0b111011101001101001011001001010111010100110101001010100011000;
+0o73515131127246512430 = 0b111011101001101001011001001010111010100110101001010100011000;
 ```
 
 Notice that Vamp-IR allows for many top-level equations in the same program.
@@ -105,4 +104,18 @@ Exponentiating by -1 will always produce 1, with the exception of 0.
 5 ^ (-1) = 1;
 0 ^ (-1) = 0;
 ```
+
+There are a handful of additional arithmetic operators which may be used so long as the circuit can be transformed so they aren't referenced. These operators will be detailed in full in the section on [expanded arithmetic](section_3_2.md). For now, the modulus, `%`, will be used as an example.
+
+```haskell
+6 = 15 % 9;
+```
+
+will create a valid proof. This is because `15 % 9` can be immediately simplified into `6` during circuit generation. If one attempts to use an uninstantiated variable, that is one without a value defined in the file, they will get an error.
+
+```haskell
+6 = x % 9;
+```
+
+will generate an error during circuit creation informing us that the modulus is not a supported constraint.
 

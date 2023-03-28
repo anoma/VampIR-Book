@@ -31,8 +31,8 @@ and dividing by a negative will usually end up as 0 since it gets interpreted as
 
 ```haskell
 (3 % 2) = 1;
-(5 % 2) = 2;
-(233 % 55) = 4;
+(5 % 3) = 2;
+(233 % 55) = 13;
 ```
 
 The modulus has similar strange behavior when interacting with negatives. Taking the modulus of a negative number can vary based on the underlying field size, as `(-n) % k` will be the same as  `p - n % k`, where `p` is the field size. For a prime field of size

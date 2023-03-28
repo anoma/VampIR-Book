@@ -4,10 +4,10 @@
 It's not always practical to calculate values purely using the operations over a finite field. As such, Vamp-IR adds an additional construct for calculating values, called `fresh`.
 
 ```haskell
-fresh (22) = 22;
+fresh 22 = 22;
 ```
 
-`fresh` must be followed by a syntactically valid expression surrounded by parentheses. This expression can call all arithmetic operators described in section on [arithmetic](section_2_1.md), along with additional operators not native to arithmetic circuits which will be detailed in the upcoming sections.
+This expression can call all arithmetic operators described in section on [arithmetic](section_2_1.md), along with additional operators not native to arithmetic circuits which will be detailed in [an upcoming section](section_3_2.md).
 
 `fresh` can make unrestricted calls to variables within the environment, and it is often used to calculate values involving them.
 
@@ -20,7 +20,7 @@ Anything called inside of fresh is essentially a black box to the circuit. The c
 The fact that `fresh` acts as a witness generator can be observed with the following code;
 
 ```haskell
-6 = fresh (15) % 9;
+6 = fresh 15 % 9;
 ```
 
 Similar to the situation described in the section on [expanded arithmetic](section_3_2.md), an error declaring that `%` is an unsupported constraint is generated. `fresh (15)` does not get turned into a number; it gets turned into a hole for a witness which is then automatically filled with `15` during proof generation. However,
@@ -31,7 +31,15 @@ Similar to the situation described in the section on [expanded arithmetic](secti
 
 will produce a valid circuit, even if `x` is a free variable which will be filled with a solicited witness.
 
-The syntactic requirements for `fresh` can lead to awkward expressions. Since negation requires its own surrounding parentheses, and fresh requires its own parentheses, `fresh (-1)` will produce a syntax error; one must write `fresh ((-1))` instead.
+Note that fresh prevents the creation of constraints equating its generated value with the expression tree generating that value. It does not, however, remove other constraints produced inside of it. Consider the progam;
+
+```haskell
+def c = { 1 = 0; 1 };
+
+1 = fresh c;
+```
+
+This will produce an invalid proof. `fresh` does not erase constraints, but, rather, prevents new constraints from arising from expression trees.
 
 <p style="color:red;">Note: It seems to me that the restriction of exponentiation, that it cannot have variables in its exponent, should be lifted inside of fresh. Currently, it is not.</p>
 
@@ -39,7 +47,7 @@ The syntactic requirements for `fresh` can lead to awkward expressions. Since ne
 
 ```haskell
 def id x = x;
-def fid = fresh (id);
+def fid = fresh id;
 
 6 = fid 6;
 ```
@@ -47,7 +55,7 @@ def fid = fresh (id);
 will produce a cryptic error informing us that the application at `fid 6` failed; although it seems to have accepted making a "fresh" version of `id`. We get a similar error from
 
 ```haskell
-(1, 6) = fresh ((1, 6));
+(1, 6) = fresh (1, 6);
 ```
 
 Generally, `fresh` should only be used to generate field elements, not data structures. So long as the return type is `int`, `fresh` can use any available functions and capabilities.
@@ -57,3 +65,4 @@ Generally, `fresh` should only be used to generate field elements, not data stru
 ```
 
 works just fine, for example.
+
