@@ -10,14 +10,14 @@ Vamp-IR is, at its core, a language for defining arithmetic circuits over finite
             </p>
         </td>
         <td style = "border: none">
-            <img style = "height: 100%" src="../diagrams/diagram-1-1.svg">
+            <img style = "height: 100%" src="./diagrams/diagram-1-1.svg">
         </td>
     </tr>
 </table>
 <table>
     <tr>
         <td style = "width: 25%; border: none">
-            <img style = "height: 100%" src="../diagrams/diagram-1-2.svg">
+            <img style = "height: 100%" src="./diagrams/diagram-1-2.svg">
         </td>
         <td style = "width: 75%; padding: 0; border: none">
             <p>
