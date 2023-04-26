@@ -1,6 +1,6 @@
 # More Arithmetic
 
-With range checks in place, we can get a more complete set of arithmetic operations. The division with remainder for positive $a$ and $b$ can be checked with the constraints;
+With range checks in place, we can get a more complete set of arithmetic operations. The division with remainder for positive `a` and `b` can be checked with the constraints;
 
 ```haskell
 def div_rem n a b = {
