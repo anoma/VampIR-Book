@@ -26,3 +26,23 @@ $ ./target/debug/vamp-ir plonk prove -i examples/pub.json \
 
 This is semantically equivalent to issuing these arguments at the command line. This procedure does not distinguish between public and private variables.
 
+There is also a command to automatically generate a template JSON file from a `.pir` file. Running
+
+```bash
+$ ./target/debug/vamp-ir generate witness-file \
+                                     -s examples/exa.pir \
+                                     -o examples/pub.json
+```
+
+where `examples/exa.pir` holds the last program in the previous section, will produce the following in `examples/pub.json`
+
+```javascript
+{
+  "h": "?",
+  "x": "?",
+  "y": "?",
+  "z": "?"
+}
+```
+
+This cannot yet be used as valid input, but one can manually modify the `?`s with appropriate numbers.

@@ -99,6 +99,16 @@ $ target/debug/vamp-ir plonk verify -u examples/params.pp \
 
 This will verify the proof just created. In this case, we've just verified a zero-knowledge proof that 10 = 10. The `-p` argument indicates a proof file and is equivalent to `--proof`. 
 
-Other than `help`, every available Vamp-IR command has now been used; `setup`, `compile`, `prove`, and `verify`. These commands define all current methods for interacting with Vamp-IR. It is a very simple system.
+Other than `help`, these are the core commands; `setup`, `compile`, `prove`, and `verify`. These commands define all current methods for interacting with Vamp-IR.
 
+Vamp-IR also accepts an additional flag for quieting output. By issueing `-q` (equivalently `--quiet`), output other than input requests will be supressed. Running;
+
+```bash
+$ target/debug/vamp-ir plonk verify -q \
+                                    -u examples/params.pp \
+                                    -c examples/circuit.plonk \
+                                    -p examples/proof.plonk
+```
+
+will exit with code 0, indicating a success, but will not print anything to the terminal.
 

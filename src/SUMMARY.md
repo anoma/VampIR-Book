@@ -14,10 +14,11 @@
 - [The Iter Function](./section_2_4.md)
 - [Lists](./section_2_5.md)
 - [Higher-Order Functions](./section_2_6.md)
+- [Intrinsics](./section_2_7.md)
 
 # Witness Generation
 
-- [The fresh keyword](./section_3_1.md)
+- [The `fresh` Function](./section_3_1.md)
 - [Expanded Arithmetic](./section_3_2.md)
 - [Conditionals](./section_3_3.md)
 - [Gating Witnesses](./section_3_4.md)

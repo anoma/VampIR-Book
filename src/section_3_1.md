@@ -52,13 +52,14 @@ def fid = fresh id;
 6 = fid 6;
 ```
 
-will produce a cryptic error informing us that the application at `fid 6` failed; although it seems to have accepted making a "fresh" version of `id`. We get a similar error from
+will produce a cryptic error informing us that the application at `fid 6` failed; although it seems to have accepted making a "fresh" version of `id`. However, we can use tuples and lists inside of fresh just fine.
 
 ```haskell
 (1, 6) = fresh (1, 6);
+1:2:3:[] = fresh (1:2:3:[]);
 ```
 
-Generally, `fresh` should only be used to generate field elements, not data structures. So long as the return type is `int`, `fresh` can use any available functions and capabilities.
+Generally, `fresh` should only be used to generate first-order structures such as field elements and tuples or lists of first order structures. So long as the return type is such a thing, `fresh` can use any available functions and capabilities within Vamp-IR.
 
 ```haskell
 7 = fresh ((fun (x, y) {x + y}) (1, 6));
