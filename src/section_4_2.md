@@ -14,7 +14,7 @@ def andb x y = x * y;
 def orb x y = negb (andb (negb x) (negb y));
 ```
 
-Rather than defining boolean functions, we may also define full constraints which may be more efficient for some operations. For example, the constraint $x \oplus y = z$, where $\oplus$ represents the xor function, can be implemented as;
+Rather than defining boolean functions, we may also define full constraints which may be more efficient for some operations. For example, the constraint \\(x \oplus y = z\\), where \\(\oplus\\) represents the xor function, can be implemented as;
 
 ```haskell
 def xor x y z = 2 * x * y = x + y - z;

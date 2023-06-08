@@ -30,7 +30,7 @@ As you can see, we can pattern match on lists just like we can with tuples. Ther
 This does not mean, however, that one must always indicate the length of the list when recursing over a list. Instead, Vamp-IR provides the `fold` functions for recursing over lists. `fold` is equivalent to right-folding functions, such as `foldr`, common to functional programming languages. It takes three arguments;
 
 1. A list to fold over.
-2. A function which incorporates an element of the list with the recursive 
+2. A function which incorporates an element of the list with a recursive result.
 3. A base value to return on an empty list.
 
 As a basic example, we can sum over the elements of a list with
