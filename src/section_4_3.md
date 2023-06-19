@@ -44,7 +44,7 @@ def intDecomp n x = decomp n (x + 2^n);
 intDecomp 8 ((-55)) = 1:0:0:1:0:0:1:1:[];
 ```
 
-This will return what is *almost* the two's complement representation. The main difference is that the last bit, indicating the sign, is the opposite of what it is in usual presentations of two's complement. With it, the sign of a number can be checked.
+This will return the two's complement representation. With it, the sign of a number can be checked.
 
 ```haskell
 def isNegative n a = last (intDecomp n a);
