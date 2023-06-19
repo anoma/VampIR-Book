@@ -31,7 +31,7 @@ def decomp_rec bits a = {
   a = a0 + 2*a1;
   (a0 : bits a1)
 };
-def decomp n = iter n decomp_rec (fun x {[]});
+def decomp n = iter n decomp_rec (fun x {x = 0; []});
 
 decomp 8 166 = 0:1:1:0:0:1:0:1:[];
 ```
@@ -39,16 +39,16 @@ decomp 8 166 = 0:1:1:0:0:1:0:1:[];
 By modifying the input number prior to checking the range, the range can be modified. For example, the following checks that something is in the range \\([-2^7, 2^7)\\)
 
 ```haskell
-def intDecomp n x = decomp n (x + 2^n);
+def intDecomp n x = decomp n (x + 2^(n-1));
 
-intDecomp 8 ((-55)) = 1:0:0:1:0:0:1:1:[];
+intDecomp 8 ((-55)) = 1:0:0:1:0:0:1:0:[];
 ```
 
-This will return the two's complement representation. With it, the sign of a number can be checked.
+This will return the two's complement representation. The main difference is that the last bit, indicating the sign, is the opposite of what it is in usual presentations of two's complement. With it, the sign of a number can be checked.
 
 ```haskell
-def isNegative n a = last (intDecomp n a);
-def isPositive n a = 1 - last (intDecomp n (a-1));
+def isPositive n a = last (intDecomp n a);
+def isNegative n a = 1 - last (intDecomp n (a-1));
 ```
 
 and one can further check if one number is less than another. The following will act as a valid \\(<\\) indicator, so long as both `x` and `y` are in the range \\([-2^{n-2}, 2^{n-2})\\).
