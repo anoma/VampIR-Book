@@ -47,8 +47,8 @@ intDecomp 8 ((-55)) = 1:0:0:1:0:0:1:0:[];
 This will return the two's complement representation. The main difference is that the last bit, indicating the sign, is the opposite of what it is in usual presentations of two's complement. With it, the sign of a number can be checked.
 
 ```haskell
-def isPositive n a = last (intDecomp n a);
-def isNegative n a = 1 - last (intDecomp n (a-1));
+def isNegative n a = 1 - last (intDecomp n a);
+def isPositive n a = last (intDecomp n (a-1));
 ```
 
 and one can further check if one number is less than another. The following will act as a valid \\(<\\) indicator, so long as both `x` and `y` are in the range \\([-2^{n-2}, 2^{n-2})\\).
